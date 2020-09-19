@@ -1,3 +1,5 @@
+
+
 # Linux 运维实操
 
 ## 前言
@@ -14,13 +16,13 @@
 
 2，失败的经验
 
-
+**本书所有经验都是基于Centos 7**
 
 ## ssh 最常用的远程登录服务
 
 SSH提供两种身份验证方式，一种是基于口令，一种是基于密钥。
 
-### 登录
+登录
 
 最常用的当然是用密钥方式登录。
 
@@ -44,7 +46,7 @@ ssh -p 2022 192.168.0.3
 
 基于密钥的方式，我基本没有用过，所以暂时不记录。
 
-### 配置文件
+配置文件
 
 ssh 的配置文件是：**/etc/ssh/sshd_config**
 
@@ -69,7 +71,7 @@ MaxAuthTries 3
 UsePAM no
 ```
 
-### 安装&更新
+安装&更新
 
 linux系统一般都自带ssh，但是可能版本比较老，需要更新，要更新的话，只能采用源码编译的方式进行安装。
 
@@ -111,9 +113,9 @@ telnet是TCP/IP协议族的一员，主要用于提供远程登录服务。
 
 不过还有一个用处就是检测端口是否打开。
 
-### 安装&更新
+安装&更新
 
-#### 检查
+检查
 
 ```shell
 rpm -qa telnet-server
@@ -122,7 +124,7 @@ rpm -qa xinetd
 
 这两个是一起的，后者是telnet的守护进程。
 
-#### 安装
+安装
 
 ```shell
 yum -y install telnet telnet-server xinetd
@@ -130,7 +132,7 @@ yum -y install telnet telnet-server xinetd
 
 三个一起安装。
 
-#### 设置开机自启动
+设置开机自启动
 
 ```shell
 systemctl enable xinetd.service
@@ -138,14 +140,14 @@ systemctl enable xinetd.service
 systemctl enable telnet.socket
 ```
 
-#### 启动
+启动
 
 ```shell
 systemctl start telnet.socket
 systemctl start xinetd
 ```
 
-#### 检查是否启动成功
+检查是否启动成功
 
 ```shell
 # telnet默认使用23端口，通过查看端口状态方式
@@ -154,14 +156,14 @@ netstat -antupl | grep 23
 # systemctl status telnet.socket
 ```
 
-#### 远程连接
+远程连接
 
 ```shell
 # 不用指定端口
 telnet 192.168.0.3
 ```
 
-#### 测试端口
+测试端口
 
 ```shell
 # 测试192.168.0.3 的3306端口
@@ -325,4 +327,295 @@ sar -n SOCK
 # 查看TCP连接
 sar -n TCP
 ```
+
+
+
+## firewall 防火墙常用配置
+
+linux centos 有三种防火墙，最常用的还是firewalld
+
+复杂的概念就不说了，直接上最常用的命令。
+
+安装
+
+```shell
+yum install firewalld firewall-config
+```
+
+开启
+
+```shell
+systemctl start firewalld
+```
+
+开机自启
+
+```shell
+systemctl enable firewalld
+```
+
+取消开机自启
+
+```shell
+systemctl disable firewalld
+```
+
+状态查看
+
+```shell
+systemctl status firewalld
+```
+
+重新加载（修改配置后，使配置生效）
+
+```shell
+firewall-cmd --reload
+```
+
+添加放行端口
+
+```shell
+# 放行2022端口，--permanent使配置在重启后不会消失
+firewall-cmd --zone=public --add-port=2022/tcp --permanent
+```
+
+移除放行端口
+
+```shell
+# 移除2022端口放行，之后外网不能访问2022端口，add改成remove就可以
+firewall-cmd --zone=public --remove-port=2022/tcp --permanent
+```
+
+查询放行端口列表（public空间下）
+
+```shell
+firewall-cmd --zone=public --list-ports
+```
+
+添加端口转发
+
+```shell
+# 将本地12345端口，转发到局域网192.168.0.8的27017端口，通常用于外网访问内网
+firewall-cmd --add-forward-port=port=12345:proto=tcp:toport=27017:toaddr=192.168.0.8 --permanent
+```
+
+删除端口转发
+
+```shell
+# 移除本地12345到内网192.168.0.8的27017端口转发，remove与add相对应
+firewall-cmd --remove-forward-port=port=12345:proto=tcp:toaddr=192.168.0.8:toport=27017 --permanent
+```
+
+指定端口访问策略
+
+```shell
+# 只允许192.168.0.0的局域网访问本机的23端口，相当于白名单
+firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.0.0/24" port protocol="tcp" port="23" accept"
+# 拒绝来自局域网对23的访问,相当于白名单
+firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.0.0/24" port protocol="tcp" port="23" reject"
+```
+
+主机访问策略
+
+```shell
+# 允许192.168.0.14的ipv4访问
+firewall-cmd --zone=public --add-rich-rule 'rule family="ipv4" source address=192.168.0.14 accept'
+# 拒绝192.168.0.14的ipv4访问
+firewall-cmd --zone=public --add-rich-rule 'rule family="ipv4" source address=192.168.0.14 reject'
+```
+
+查看防火墙的所有区域设置（端口，策略，服务）
+
+```shell
+ firewall-cmd --list-all
+```
+
+## tar 文件压缩与解压
+
+tar 是linux中使用最多的压缩与解压工具，当然还有其他的，不过都是小弟。
+
+常见的压缩文件格式：
+
+`*.Z`: compress程序压缩文件，目前使用较少。已经有gzip替换了。
+
+`*.gz`: gzip程序压缩的文件。
+
+`*.bz2`:bzip2程序压缩的文件，比gzip的压缩比更好。
+
+
+
+采用gzip方式压缩
+
+```shell
+# 先指定压缩结果文件，再指定需要压缩的路径或文件
+tar -zpcv -f /root/etc.tar.gz /etc
+```
+
+采用bzip2方式压缩
+
+```shell
+# 先指定压缩结果文件，再指定需要压缩的路径或文件
+tar -jpcv -f /root/etc.tar.bz2 /etc
+```
+
+解压bz2文件
+
+```shell
+tar -jxv -f /root/etc.tar.bz2
+```
+
+解压到指定目录
+
+```shell
+# -C 指定tmp目录
+tar -jxv -f /root/etc.tar.bz2 -C /tmp
+```
+
+zip压缩文件
+
+```shell
+# -r 递归打包，压缩文件夹的时候使用
+zip -r  etc.zip /root/etc	
+```
+
+zip解压
+
+```shell
+zip etc.zip
+```
+
+tar创建压缩文件
+
+```shell
+tar -czvf etc.tar.gz /root/etc	
+```
+
+tar解压压缩文件
+
+```shell
+tar -xzvf etc.tar.gz
+```
+
+## rz&sz 文件上传与下载
+
+常用的工具是lrzsz
+
+安装
+
+```shell
+yum yum install -y lrzsz
+```
+
+上传
+
+```shell
+# 上传文件，会打开一个弹窗，直接选择文件，可以多选
+rz 
+```
+
+下载
+
+```shell
+# 下载文件，会打开一个弹窗，选择文件的下载路径，可以多选
+sz 文件名
+```
+
+## scp 文件传输
+
+一般是是指局域网内文件传输，同为linux，并且都运行着ssh服务才行。
+
+本机传输**文件**到另一台服务器
+
+```shell
+# 将jdk传输到192.168.0.10的root目录下，一定要指定具体目录，否则传输失败
+scp jdk-8u251-linux-x64.tar root@192.168.0.10:/root
+```
+
+本机传输**文件**到另一台服务器（指定端口）
+
+```shell
+# 因为192.168.0.10上ssh是监听2022端口，所以要指定端口
+scp -P 2022 jdk-8u251-linux-x64.tar root@192.168.0.10:/root
+```
+
+复制**目录**到另一台服务器
+
+```shell
+scp -r /root/etc root@@192.168.0.10:/root/etc
+```
+
+复制**目录**远程到本地
+
+```shell
+scp -r root@192.168.0.10:/root/etc /root/etc
+```
+
+复制**文件**远程到本地
+
+```shell
+scp root@192.168.0.10:/root/etc/etc.tar.gz /root/etc
+```
+
+**如果远程ssh有特定端口，需要使用-P来指定端口。**
+
+**如果复制文件夹，需要使用-r来做递归处理。**
+
+## jdk 安装配置很简单
+
+相比windows，linux上安装配置jdk不要太简单，这也是我渐渐不喜欢windos的原因之一。
+
+检查当前jdk是否安装及版本情况
+
+```shell
+java -version
+```
+
+```shell
+rpm -qa | grep java
+```
+
+卸载已有jdk
+
+```shell
+# 后面加所有rpm -qa | grep java的结果
+rpm -e --nodeps *
+```
+
+下载
+
+**Oracle官网或者自己搜**
+
+安装
+
+```shell
+# 假设下载下来的是jdk-8u251-linux-x64.tar.gz一个安装包
+tar -xzvf jdk-8u251-linux-x64.tar.gz
+# 改文件夹名字
+mv jdk-8u251-linux-x64 jdk
+# 改位置
+mv jdk /usr/local
+```
+
+配置
+
+```shell
+编辑配置文件
+vim /etc/profile
+# 在文件最后加上下面几句，然后保存
+export JAVA_HOME=/usr/local/jdk
+export JAVA_BIN=$JAVA_HOME/bin
+export JAVA_LIB=$JAVA_HOME/lib
+export CLASSPATH=.:$JAVA_LIB/tools,jar:$JAVA_LIB/dt.jar
+export PATH=$JAVA_BIN:$PATH
+# 使配置生效
+source /etc/profile
+```
+
+验证
+
+```shell
+java -version
+```
+
+输出下载的版本，说明配置成功。
 
