@@ -619,3 +619,271 @@ java -version
 
 输出下载的版本，说明配置成功。
 
+## nginx 高性能web服务器
+
+这东西是目前主流的web服务器，资料一搜一大堆，我只记录自己用的最多的。
+
+安装配置
+
+> 这是下载地址：
+>
+> http://nginx.org/en/download.html 
+>
+> 下载完之后，就在这样的一个安装包：
+>
+> nginx-1.18.0.tar.gz
+
+直接解压
+
+```shell
+tar -xzvf nginx-1.18.0.tar.gz
+```
+
+配置
+
+```shell
+cd nginx-1.18.0
+# 这个是使用默认的，什么参数也不加
+./configure 
+# 中途有抱什么错误，直接把错误第一行，复制粘贴到搜索框，一搜就能找到解决办法，多半是确实某个组件
+```
+
+安装
+
+```shell
+make 
+make install
+# 这两步可以一起进行
+make && make install
+```
+
+安装完毕之后，就可以在/usr/local下面看到nginx的文件夹
+
+> conf 目录，配置文集存放的目录
+>
+> sbin目录，存放可运行文件，也就一个nginx可运行文件
+>
+> html目录，nginx默认的存放html文件的目录
+>
+> logs目录，里面存着nginx的日志，通过的请求记录access,log，错误日志error.log
+>
+> 主要就这几个，其他的暂时用不到。
+
+部署项目
+
+> 一般是前端项目，也就是html页面，css文件，js文件，图片和其他的东西。
+>
+> 在conf目录下，编辑nginx.conf文件，nginx默认使用这个文件，在不指定配置文件的情况下。
+>
+> ```shell
+> # 在http{}中加入一个服务，nginx认大括号，不用特意对齐，括号对应就行。
+> # 简单开启一个服务，端口8088，根目录是 /usr/local/nginx/h5/，index文件是index.html
+> # 本机的8088端口所有请求都会跳转到 /usr/local/nginx/h5/下
+> server {
+>         listen       8088;
+>         server_name localhost;
+>       
+>         location / {
+>             root   /usr/local/nginx/h5/;
+>             index  index.html;
+>         }
+>        } 
+> 
+> ```
+
+代理转发
+
+```shell
+# 代理转发
+# 在http{}中开启一个服务，监听8888
+# 所有访问本机8888端口的流量都会被代理到内网192.168.0.17:8888端口
+server {
+           listen      8888;
+           server_name localhost;
+          location / {
+                   proxy_pass              http://192.168.0.17:8888;
+           }
+          }
+```
+
+根据路径转发
+
+```shell
+# 监听8088端口
+# 路径中/resources请求，直接访问本地的/opt/upFiles目录
+# 路径中/pass请求，直接代理带内网的8888端口
+server {
+        listen       8088;
+        server_name  localhost;
+
+        location / {
+            root   /usr/local/nginx/h5/;
+            index  index.html;
+        }
+
+        location /resources {
+            root   /opt/upFiles;
+                  }
+        location ^~/pass {
+            proxy_pass http://192.168.0.17:8888;
+
+         }
+        }
+```
+
+支持https
+
+```shell
+ # 支持https
+ # 需要证书和密钥
+ # 需要在端口后面加上ssl
+ # 需要后面的一大堆设置，看不懂直接复制粘贴
+ server {
+           listen      8448 ssl;
+           server_name 127.0.0.1;
+           ssl_certificate "ssl.crt";
+           ssl_certificate_key "ssl.key";
+           ssl_session_cache shared:SSL:1m;
+           ssl_session_timeout  5m;
+           ssl_protocols SSLv2 SSLv3 TLSv1;
+           ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+           ssl_prefer_server_ciphers on;
+            location / {
+            root   /usr/local/nginx/h5/;
+            index  index.html;
+        }
+           } 
+```
+
+端口转发
+
+```shell
+# 这个stream和http是平级的关系
+# 这里开启一个服务，监听8440端口，代理到cloudsocket10对应的服务器地址和端口
+# 每做一个端口的转发，都需要一个server开启服务，一个upstream。
+stream {
+    upstream cloudsocket10 {
+       hash $remote_addr consistent;
+       server 192.168.0.10:3306 weight=5 max_fails=3 fail_timeout=30s;
+    }
+   
+    server {
+       listen 8440;
+       proxy_connect_timeout 10s;
+       proxy_timeout 300s;
+       proxy_pass cloudsocket10;
+  }
+}
+```
+
+升级和模块支持
+
+> https需要ssl模块的支持，因此需要对nginx添加模块支持
+>
+> 找到nginx源码目录
+>
+> 假定是nginx-1.18.0
+>
+> ```shell
+> # 意思是加上ssl模块
+> ./configure --with-http_ssl_module
+> # 编译
+> make
+> # 编译完成之后，在nginx的objs目录下，会有一个新的nginx运行文件，直接复制到/usr/local/nginx/sbin就行了
+> # 再次之前，建议对原来的nginx做个备份
+> mv /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/nginx.bak
+> 
+> ```
+
+配置文件说明
+
+```shell
+# 指定nginx的运行用户
+user  root;
+# 指定nginx进程数量，应该是小于等于cpu数量
+worker_processse 1;
+# 每个进程可接收的最大连接数量
+worker_connections  1024;
+
+```
+
+常用命令
+
+``` shell
+# 切换到nginx安装目录
+cd /usr/local/nginx/sbin
+# 运行nginx 默认使用nginx.conf作为配置文件shell
+./nginx
+# 指定配置文件，启动nginx
+./nginx -c /usr/local/nginx/conf/nginx.conf.bak
+# 重新加载配置文件，默认是nginx.conf
+./nginx -s reload
+# 快速停止nginx进程
+./nginx -s stop 
+# 正常停止nginx
+./nginx -s quit
+# 检测配置文件，默认是nginx.conf
+nginx -t
+```
+
+路径匹配规则
+
+> ​	基础语法
+>
+> - =     严格匹配。如果请求匹配这个location，那么将停止搜索并立即处理此请求
+> - ~     区分大小写匹配(可用正则表达式)
+> - ~*    不区分大小写匹配(可用正则表达式)
+> - !~    区分大小写不匹配
+> - !~*   不区分大小写不匹配
+> - ^~    如果把这个前缀用于一个常规字符串,那么告诉nginx 如果路径匹配那么不测试正则表达式
+
+设置文件上传最大值
+
+```shell
+# 写作server里，表示对这个server生效
+# 卸载http里面，表示对http里的所有server生效
+# 不用加mb，这个的意思是最大限制20MB
+client_max_body_size   20m;
+```
+
+## redis 安装配置
+
+下载
+
+```shell
+# 下载地址，因为6.0的版本还不稳定，所以还是用5.0的版本
+wget http://download.redis.io/releases/redis-5.0.4.tar.gz
+```
+
+解压
+
+```shell
+tar -xzvf redis-5.0.4.tar.gz
+```
+
+编译
+
+```shell
+cd redis-5.0.4
+make
+```
+
+安装
+
+```shell
+# 这个一路点enter就可以了，就是确认配置文件的一些配置项
+# 这个运行结束，出现successfully的字样，就算完了
+# 安装完之后会自动运行
+cd utils/
+./install_server.sh
+```
+
+验证、
+
+```shell
+# 有结果，
+netstat -tnulp|grep redis
+# 出现下面的结果，说明redis安装成功，而且已经在运行了
+tcp        0      0 0.0.0.0:6379            0.0.0.0:*               LISTEN      11765/./redis-serve
+```
+
