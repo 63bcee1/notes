@@ -18,6 +18,117 @@
 
 **本书所有经验都是基于Centos 7**
 
+## 常用命令
+
+```shell
+# 打印当前目录 显示出当前工作目录的绝对路径
+pwd:print work directory 
+# 进程状态，类似于windows的任务管理器
+ps: process status
+# 显示磁盘可用空间数目信息及空间结点信息
+df: disk free 
+
+du: Disk usage
+
+rpm：RedHat Package Management
+
+dpkg：Debian package manager
+
+# Debian或基于Debian的发行版中提供部分Linux命令缩写
+apt：Advanced package tool
+# 删除目录
+rmdir：Remove Directory
+# 删除目录或文件
+rm：Remove
+# 连锁
+cat: concatenate 
+# 载入模块
+insmod: install module
+# 创建一个软链接，相当于创建一个快捷方式
+ln -s : link -soft 
+# 创建目录
+mkdir：Make Directory
+
+touch
+
+man: Manual
+
+# 切换用户
+su：Swith user
+
+cd：Change directory
+
+ls：List files
+
+mkfs: Make file system
+
+fsck：File system check
+
+uname: Unix name
+
+lsmod: List modules
+
+mv: Move file
+
+rm: Remove file
+
+cp: Copy file
+
+ln: Link files
+
+fg: Foreground
+
+bg: Background
+
+chown: Change owner
+
+chgrp: Change group
+
+chmod: Change mode
+
+umount: Unmount
+
+# 磁带档案
+tar：Tape archive 
+
+ldd：List dynamic dependencies
+
+insmod：Install module
+
+rmmod：Remove module
+
+```
+
+
+
+## 文件后缀
+
+> 文件结尾的"rc"（如.bashrc、.xinitrc等）：Resource configuration
+>
+> .a（扩展名a）：Archive，static library
+>
+> .so（扩展名so）：Shared object，dynamically linked library
+>
+> .o（扩展名o）：Object file，complied result of C/C++ source file
+
+## 文件目录
+
+> /dev = Devices (设备)
+>
+> /etc = Etcetera (等等)
+>
+> /lib = LIBrary
+>
+> /proc = Processes
+>
+> /sbin = Superuser Binaries (超级用户的二进制文件)
+>
+> /tmp = Temporary (临时)
+>
+> /usr = Unix Shared Resources
+>
+> /var = Variable (变量)
+
 ## ssh 最常用的远程登录服务
 
 SSH提供两种身份验证方式，一种是基于口令，一种是基于密钥。
@@ -188,7 +299,7 @@ telnet 127.0.0.1 3306
 
 我也就是再升级ssh的时候，或者相关组件，可能会影响ssh连接的时候，才会开启以作备用。
 
-## ps 强大的进程状态查看工具
+## ps 进程状态查看工具
 
 ps这个工具有多强大呢？从参数数量上就可以看出来。
 
@@ -290,7 +401,7 @@ mpstat -P ALL
 mpstat -P 1
 ```
 
-## sar 性能监控好手
+## sar 性能监控
 
 ```shell
 # 查看平均负载
@@ -560,7 +671,28 @@ scp root@192.168.0.10:/root/etc/etc.tar.gz /root/etc
 
 **如果复制文件夹，需要使用-r来做递归处理。**
 
-## jdk 安装配置很简单
+## rsync 同步工具
+
+最常用的文件同步工具，使用起来相当方便
+
+主机间同步
+
+```shell
+#如果没有开启默认的22端口，指定ssh端口同步
+# 加上/ 表示将目录下的文件同步过去
+rsync -av -e 'ssh -p 2022' /root/work/backup/database/ 192.168.0.16:/root/work/temp
+# 不加/ 表示同步整个目录，会多一个目录层级
+rsync -av -e 'ssh -p 2022' /root/work/backup/database 192.168.0.16:/root/work/temp
+```
+
+本地同步
+
+```shell
+# 加/与不加/的效果同上
+rsync -av temp/ dest/
+```
+
+## jdk 安装配置
 
 相比windows，linux上安装配置jdk不要太简单，这也是我渐渐不喜欢windos的原因之一。
 
@@ -619,7 +751,7 @@ java -version
 
 输出下载的版本，说明配置成功。
 
-## nginx 高性能web服务器
+## nginx 使用
 
 这东西是目前主流的web服务器，资料一搜一大堆，我只记录自己用的最多的。
 
@@ -691,7 +823,7 @@ make && make install
 > 
 > ```
 
-代理转发
+反向代理
 
 ```shell
 # 代理转发
@@ -706,7 +838,7 @@ server {
           }
 ```
 
-根据路径转发
+根据路径代理
 
 ```shell
 # 监听8088端口
@@ -840,13 +972,13 @@ nginx -t
 设置文件上传最大值
 
 ```shell
-# 写作server里，表示对这个server生效
-# 卸载http里面，表示对http里的所有server生效
+# 写在server里，表示对这个server生效
+# 写在http里面，表示对http里的所有server生效
 # 不用加mb，这个的意思是最大限制20MB
 client_max_body_size   20m;
 ```
 
-## redis 安装配置
+## redis 源码安装
 
 下载
 
@@ -878,7 +1010,7 @@ cd utils/
 ./install_server.sh
 ```
 
-验证、
+验证
 
 ```shell
 # 有结果，
@@ -887,3 +1019,191 @@ netstat -tnulp|grep redis
 tcp        0      0 0.0.0.0:6379            0.0.0.0:*               LISTEN      11765/./redis-serve
 ```
 
+## mysql 使用
+
+安装
+
+```shell
+# 下载rpm文件
+wget https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm
+# 运行rpm文件
+rpm -ivh mysql57-community-release-el7-9.noarch.rpm
+# 安装
+yum install mysql-server
+```
+
+这是最便捷的方法，也能避免很多问题。
+
+启动&关闭
+
+```shell
+#启动
+systemctl start mysqld
+#关闭
+systemctl stop mysqld		
+```
+
+配置文件
+
+```shell
+# 默认路径
+/etc/my.cnf 
+```
+
+主从备份
+
+```shell
+# 至少需要两台安装有mysql的服务器
+# 版本应该尽量相近
+# 下面是详细步骤：
+1）编辑主节点数据库配置文件my.cnf：
+[mysqld]
+log-bin=mysql-bin-master          #启用二进制日志
+server-id=8                        #本机数据库ID 标示
+2）重启主数据库：
+systemc restart mysqld
+3）登录数据库，创建备份用户及授权：
+创建用户：CREATE USER 'username'@'192.168.0.10' IDENTIFIED BY 'password';
+授权：GRANT REPLICATION SLAVE ON *.* to ‘username’@‘192.168.0.10’ identified by ‘password’;
+4）查看主数据库状态：
+show master status;
+记录下File和Position
+5）编辑从数据库配置文件my.cnf：
+[mysqld]
+log-bin=mysql-bin-slave          #启用二进制日志
+server-id=10
+6）重启从数据库：
+systemc restart mysqld
+7）登录从数据库，切换主数据库源：
+change master to master_host='192.168.0.8',master_user='username',master_password='password',master_log_file='mysql-bin.000002',master_log_pos=263;
+# master_log_file 填写之前记录的File，
+# master_log_pos填写之前记录的Position
+8）启动slave同步：
+start slave;
+9）查看同步状态：
+show slave status;
+如果没有出现error字段，则说明主从备份设置成功。
+```
+
+数据导出
+
+```shell
+# -u指定用户名 -p指定密码 -h指定地址，不要-h默认是127.0.0.1 --databases 指定数据库，可以同时导出多个数据库
+mysqldump -uroot -p123456 -h127.0.0.1 --databases temp  >temp.sql
+```
+
+数据恢复
+
+```shell
+# 登录数据库
+mysql -uroot -p123456
+# 加载sql语句，使用绝对路径
+resource snms_2020-07-07.sql;
+```
+
+## mongodb 使用
+
+安装
+
+```shell
+# 添加yum源：
+vim /etc/yum.repos.d/mongodb-org-4.0.repo
+# 编辑内容：
+[mongodb-org-4.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc
+# 使用yum安装：
+yum install -y mongodb-org
+```
+
+```shell
+# 下载
+wget https://repo.mongodb.org/yum/redhat/7/mongodb-org/4.4/x86_64/RPMS/mongodb-org-server-4.4.1-1.el7.x86_64.rpm
+# 安装
+rpm -ivh mongodb-org-server-4.4.1-1.el7.x86_64.rpm
+```
+
+关闭&启动
+
+```shell
+#启动
+systemctl status mongod	
+#关闭
+systemctl stop mongod
+```
+
+配置文件
+
+```shell
+# 默认配置文件路经
+/etc/mongod.conf
+```
+
+**最新版本的mongodb采用yaml文件格式进行配置，需要注意的是每个:后面必须有一个空格，再跟上值，不然会报错，无法启动。**
+
+数据备份
+
+```shell
+# 指定用户名 密码 数据 导出目录
+mongodump --username=admin --password=123456 --db temp -o directory
+```
+
+副本集
+
+```shell
+# 配置
+config = { _id:"mongoback", members:[{_id:0,host:"192.168.0.8:27017"},{_id:1,host:"192.168.0.10:27017"}]}
+```
+
+## ntp 服务
+
+检查ntp是否安装
+
+```shell
+rpm -q ntp
+```
+
+安装ntp服务
+
+```shell
+yum -y install ntp
+```
+
+启动
+
+```shell
+systemctl start ntpd
+```
+
+开机启动
+
+```shell
+systemctl enable ntpd
+```
+
+查看网络中的ntp服务
+
+```shell
+ntpq -p
+```
+
+查看时间同步状态
+
+```shell
+ntpstat
+```
+
+同步时间
+
+```shell
+ntpdate -u cn.pool.ntp.org
+```
+
+```
+ntpdate asia.pool.ntp.org
+```
+
+**两种写法都可以，后面跟不同的时间服务器地址**
