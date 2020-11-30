@@ -1,18 +1,8 @@
-
-
-# Linux 运维实操
+# Linux 运维笔记
 
 ## 前言
 
-我发现那些经常需要用到的知识，总是记不住，每次都要查好久的资料，最后才解决，为了以后少走弯路，少浪费时间在重复的事情，我决定把之前的工作经验记录下来，以备日后只用。
-
-总得来说，本书只会记录两样东西：
-
-1，成功的实践
-
-2，失败的经验
-
-**本书所有经验都是基于Centos 7**
+**本书所有实践都是基于Centos 7**
 
 ## 常用命令
 
@@ -125,7 +115,7 @@ rmmod：Remove module
 >
 > /var = Variable (变量)
 
-## ssh 最常用的远程登录服务
+## ssh 配置与使用
 
 SSH提供两种身份验证方式，一种是基于口令，一种是基于密钥。
 
@@ -214,7 +204,7 @@ yum install -y openssl-devel
 
 以上一centos为例，其他系统大同小异。
 
-## telnet 备用的远程登录服务
+## telnet 配置与使用
 
 telnet是TCP/IP协议族的一员，主要用于提供远程登录服务。
 
@@ -281,7 +271,7 @@ telnet 127.0.0.1 3306
 
 出现**Connected to 192.168.0.3**字样，则说的端口畅通，处于监听状态，反之则不通。
 
-## telnet和ssh配合使用
+## telnet和ssh 配合使用
 
 之所以使用ssh，是因为ssh更加安全一些，毕竟名字就叫[Secure Shell](https://baike.baidu.com/item/Secure Shell)，还是要考虑安全因素。
 
@@ -295,7 +285,7 @@ telnet 127.0.0.1 3306
 
 我也就是再升级ssh的时候，或者相关组件，可能会影响ssh连接的时候，才会开启以作备用。
 
-## ps 进程状态查看工具
+## ps 常用命令
 
 ps这个工具有多强大呢？从参数数量上就可以看出来。
 
@@ -325,7 +315,7 @@ ps -u root
 
 要有实时性，当然还是**top**命令。
 
-## top 实时显示系统信息
+## top 常用命令
 
 top可以查看系统的运行情况，如果是巡检的话，首先就是top命令一下，看看系统的运行是否正常。
 
@@ -386,7 +376,7 @@ top可以查看系统的运行情况，如果是巡检的话，首先就是top�
 > TIME+ — 进程使用的CPU时间总计，单位1/100秒
 > COMMAND — 进程名称（命令名/命令行）
 
-## mpstat 报告CPU统计信息
+## mpstat 常用命令
 
 主要用于多CPU的环境下，还可以查看知道
 
@@ -397,7 +387,7 @@ mpstat -P ALL
 mpstat -P 1
 ```
 
-## sar 性能监控
+## sar 常用命令
 
 ```shell
 # 查看平均负载
@@ -437,7 +427,7 @@ sar -n TCP
 
 
 
-## firewall 防火墙常用配置
+## firewall 常用配置
 
 linux centos 有三种防火墙，最常用的还是firewalld
 
@@ -537,7 +527,7 @@ firewall-cmd --zone=public --add-rich-rule 'rule family="ipv4" source address=19
  firewall-cmd --list-all
 ```
 
-## tar 文件压缩与解压
+## tar 常用命令
 
 tar 是linux中使用最多的压缩与解压工具，当然还有其他的，不过都是小弟。
 
@@ -603,7 +593,7 @@ tar解压压缩文件
 tar -xzvf etc.tar.gz
 ```
 
-## rz&sz 文件上传与下载
+## rz&sz 常用命令
 
 常用的工具是lrzsz
 
@@ -627,7 +617,7 @@ rz
 sz 文件名
 ```
 
-## scp 文件传输
+## scp 常用命令
 
 一般是是指局域网内文件传输，同为linux，并且都运行着ssh服务才行。
 
@@ -667,7 +657,7 @@ scp root@192.168.0.10:/root/etc/etc.tar.gz /root/etc
 
 **如果复制文件夹，需要使用-r来做递归处理。**
 
-## rsync 同步工具
+## rsync 常用命令
 
 最常用的文件同步工具，使用起来相当方便
 
@@ -688,7 +678,7 @@ rsync -av -e 'ssh -p 2022' /root/work/backup/database 192.168.0.16:/root/work/te
 rsync -av temp/ dest/
 ```
 
-## jdk 安装配置
+## JDK 安装配置
 
 相比windows，linux上安装配置jdk不要太简单，这也是我渐渐不喜欢windos的原因之一。
 
@@ -747,7 +737,7 @@ java -version
 
 输出下载的版本，说明配置成功。
 
-## nginx 使用
+## Nginx 使用
 
 这东西是目前主流的web服务器，资料一搜一大堆，我只记录自己用的最多的。
 
@@ -974,7 +964,7 @@ nginx -t
 client_max_body_size   20m;
 ```
 
-## redis 源码安装
+## Redis 安装配置
 
 下载
 
@@ -1015,7 +1005,7 @@ netstat -tnulp|grep redis
 tcp        0      0 0.0.0.0:6379            0.0.0.0:*               LISTEN      11765/./redis-serve
 ```
 
-## mysql 使用
+## Mysql 安装配置
 
 安装
 
@@ -1097,7 +1087,92 @@ mysql -uroot -p123456
 resource snms_2020-07-07.sql;
 ```
 
-## mongodb 使用
+## XtraBackup 备份与恢复
+
+下载
+
+```shell
+# mysql 8.0 及更高版本
+wget https://www.percona.com/downloads/Percona-XtraBackup-LATEST/Percona-XtraBackup-8.0.14/binary/redhat/7/x86_64/percona-xtrabackup-80-8.0.14-1.el7.x86_64.rpm
+# mysql 8.0 以下版本
+wget https://downloads.percona.com/downloads/Percona-XtraBackup-2.4/Percona-XtraBackup-2.4.9/binary/redhat/7/x86_64/percona-xtrabackup-24-2.4.9-1.el7.x86_64.rpm
+--2020-11-30 09:00:14--  https://downloads.percona.com/downloads/Percona-XtraBackup-2.4/Percona-XtraBackup-2.4.9/binary/redhat/7/x86_64/percona-xtrabackup-24-2.4.9-1.el7.x86_64.rpm
+```
+
+安装
+
+```
+yum install percona-xtrabackup-80-8.0.14-1.el7.x86_64.rpm
+```
+
+全量备份
+
+```
+innobackupex --user=user --password=password --databases=test dir
+```
+
+**需要创建dir目录**
+
+增量备份
+
+```shell
+innobackupex --user=user --password=password --databases=test --incremental innobackinreament/ --incremental-basedir=innoback/2020-11-17_16-31-33/
+```
+
+--**incremental 后面跟增量备份的目录 需要提前创建**
+
+**--incremental-basedir=后面跟基于哪个备份结果进行增量**
+
+数据恢复
+
+```shell
+ innobackupex --user=root --copy-back /data/back_data/2019-03-22_14-21-54/
+```
+
+## Vmware 扩容
+
+1，关闭虚拟机
+
+2，虚拟机-设置-扩展磁盘容量，选择扩容大小
+
+3，重启虚拟机
+
+4，查看磁盘分区
+
+```shell
+fdisk -l
+```
+
+5，分区
+
+```shell
+fdisk /dev/sda
+n 新增一个分区
+p 普通分区类型
+分区号默认
+最后w，保存退出
+```
+
+6，格式化分区
+
+```shell
+mkfs.xfs /dev/sda3
+```
+
+7，挂载分区
+
+```shell
+ mount /dev/sda3 /mnt/
+```
+
+8，查看磁盘
+
+```shell
+df -lh
+# 会多出一个刚才挂在的分区
+```
+
+## Mongodb 安装配置
 
 安装
 
@@ -1154,7 +1229,7 @@ mongodump --username=admin --password=123456 --db temp -o directory
 config = { _id:"mongoback", members:[{_id:0,host:"192.168.0.8:27017"},{_id:1,host:"192.168.0.10:27017"}]}
 ```
 
-## ntp 服务
+## ntp 安装使用
 
 检查ntp是否安装
 
@@ -1203,3 +1278,275 @@ ntpdate asia.pool.ntp.org
 ```
 
 **两种写法都可以，后面跟不同的时间服务器地址**
+
+## Zabbix 安装配置
+
+安装lamp
+
+```shell
+yum install -y httpd  php php-mysql php-gd libjpeg* php-ldap php-odbc php-pear php-xml php-xmlrpc php-mhash
+```
+
+安装开发工具
+
+```shell
+yum groups install "Development Tools"
+```
+
+安装zabbix
+
+```shell
+
+rpm -ivh https://mirrors.huaweicloud.com/zabbix/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+```
+
+安装server和agent
+
+```shell
+yum install zabbix-server-mysql zabbix-agent -y
+```
+
+启用Red Hat软件集合
+
+```shell
+yum install centos-release-scl -y
+```
+
+安装zabbix前端
+
+```shell
+yum install -y zabbix-web-mysql-scl zabbix-apache-conf-scl
+```
+
+安装mysql数据库
+
+```shell
+yum -y install mariadb-server mariadb
+```
+
+启动数据库
+
+```shell
+systemctl start mariadb&&systemctl enable mariadb
+```
+
+创建数据库和授权
+
+```sql
+create database zabbix character set utf8 collate utf8_bin;
+create user zabbix@localhost identified by 'zabbix123';
+grant all privileges on zabbix.* to zabbix@localhost;
+```
+
+导入初始架构和数据
+
+```shell
+zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -u zabbix -p zabbix123
+```
+
+修改时区
+
+```shell
+vim /etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf
+php_value[date.timezone] = Asia/Shanghai
+```
+
+修改端口
+
+```shell
+vim /etc/httpd/conf/httpd.conf
+Listen 8090
+```
+
+启动服务
+
+```shell
+systemctl restart zabbix-server zabbix-agent httpd rh-php72-php-fpm
+```
+
+设置自启动
+
+```
+systemctl enable zabbix-server zabbix-agent httpd rh-php72-php-fpm
+```
+
+访问链接
+
+```
+http://IP:PORT/zabbix
+```
+
+一直点下一步就行
+
+给要监控的主机安装agent
+
+```shell
+rpm -ivh https://mirrors.huaweicloud.com/zabbix/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+yum install zabbix-agent -y
+```
+
+编辑agent配置文件
+
+```shell
+Server=127.0.0.1	# 写server服务所在地址
+ServerActive=127.0.0.1	# 写server服务所在地址
+Hostname=web	# 写一个服务器的别名，前端配置的时候需要和这个名字一样
+```
+
+启动agent
+
+```
+systemctl start zabbix-agent
+```
+
+设置自启动agent
+
+```
+systemctl enable zabbix-agent
+```
+
+## Python3 安装配置
+
+### 第一种方法：
+
+下载（版本自选）
+
+```shell
+wget http://npm.taobao.org/mirrors/python/3.7.4/Python-3.7.4.tgz
+```
+
+解压
+
+```shell
+tar -zxvf Python-3.7.4.tgz
+```
+
+配置检查
+
+```shell
+cd Python-3.7.4
+./configure
+```
+
+编译&安装
+
+```
+make&&make install
+```
+
+验证
+
+```
+python3
+pip3 list
+```
+
+换源
+
+```shell
+# 找到配置文件的位置
+find / -name pip.conf
+# 编辑配置文件
+vim /root/.pip/pip.conf
+# 替换以前的源
+[global]
+index-url = http://mirrors.aliyun.com/pypi/simple/
+[install]
+trusted-host = mirrors.aliyun.com
+```
+
+### 第二种方法：
+
+安装相关依赖
+
+```shell
+yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gcc make
+```
+
+安装扩展源
+
+```shell
+yum -y install epel-release
+```
+
+安装pip
+
+```shell
+
+yum install python-pip
+```
+
+下载安装包
+
+```
+wget http://npm.taobao.org/mirrors/python/3.7.4/Python-3.7.4.tar.xz
+```
+
+解压安装
+
+```shell
+xz -d Python-3.7.4rc2.tar.xz
+tar -xf Python-3.7.4rc2.tar
+cd Python-3.7.4rc2
+./configure prefix=/usr/local/python3
+make && make install
+```
+
+**以上，一条一条运行**
+
+遇到问题：
+
+> ModuleNotFoundError: No module named '_ctypes' make: *** [install] 错误 1
+
+解决办法：
+
+> yum -y install libffi-devel
+
+创建软连接：
+
+```shell
+ln -s /usr/local/python3/bin/python3 /usr/bin/python3
+ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
+
+```
+
+
+
+## ElasticSearch 安装
+
+下载
+
+```shell
+wget https://mirrors.huaweicloud.com/elasticsearch/7.9.0/elasticsearch-7.9.0-x86_64.rpm
+```
+
+安装
+
+```
+yum install elasticsearch-7.9.0-x86_64.rpm
+```
+
+切换用户
+
+```
+su elsearch
+```
+
+运行
+
+```shell
+cd /opt/elasticsearch/bin
+# 启动
+./elasticsearch
+# 后台启动
+./elasticsearch -d
+```
+
+## kibana 安装
+
+下载
+
+```shell
+wget https://mirrors.huaweicloud.com/kibana/7.8.0/kibana-7.8.0-x86_64.rpm
+```
+
