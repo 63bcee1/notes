@@ -431,8 +431,6 @@ sar -n TCP
 
 linux centos 有三种防火墙，最常用的还是firewalld
 
-复杂的概念就不说了，直接上最常用的命令。
-
 安装
 
 ```shell
@@ -615,6 +613,26 @@ rz
 ```shell
 # 下载文件，会打开一个弹窗，选择文件的下载路径，可以多选
 sz 文件名
+```
+
+## du 命令
+
+du 会显示指定的目录或文件所占用的磁盘空间。
+
+- -a或-all 显示目录中个别文件的大小。
+- -b或-bytes 显示目录或文件大小时，以byte为单位。
+- c或--total 除了显示个别目录或文件的大小外，同时也显示所有目录或文件的总和。
+- -D或--dereference-args 显示指定符号连接的源文件大小。
+- -h或--human-readable 以K，M，G为单位，提高信息的可读性。
+- --max-depth=<目录层数> 超过指定层数的目录后，予以忽略。
+
+```
+# 以k，M,G为单位，显示所有文件
+du -ah
+# 以bytes为单位
+du -ab
+# 最多五层深度
+du --max-depth 5 
 ```
 
 ## scp 常用命令
@@ -1126,8 +1144,70 @@ innobackupex --user=user --password=password --databases=test --incremental inno
 数据恢复
 
 ```shell
+ # 准备阶段命令
+ innobackupex --apply-log /data/back_data/2019-03-22_14-21-54/
+ # 执行备份
  innobackupex --user=root --copy-back /data/back_data/2019-03-22_14-21-54/
 ```
+
+常用参数
+
+```shell
+#常用参数
+--user：该选项表示备份账号。
+--password：该选项表示备份的密码。
+--port：该选项表示备份数据库的端口。
+--host：该选项表示备份数据库的地址。
+--socket：该选项表示mysql.sock所在位置，以便备份进程登录mysql。
+--defaults-file：该选项指定了从哪个文件读取MySQL配置，必须放在命令行第一个选项的位置。
+--databases：该选项接受的参数为数据名，如果要指定多个数据库，彼此间需要以空格隔开；如："db1 db2"，同时，在指定某数据库时，也可以只指定其中的某张表。如："mydatabase.mytable"。该选项对innodb引擎表无效，还是会备份所有innodb表。此外，此选项也可以接受一个文件为参数，文件中每一行为一个要备份的对象。
+
+#压缩参数
+--compress：该选项表示压缩innodb数据文件的备份。
+--compress-threads：该选项表示并行压缩worker线程的数量。
+--compress-chunk-size：该选项表示每个压缩线程worker buffer的大小，单位是字节，默认是64K。
+
+#加密参数
+--encrypt：该选项表示通过ENCRYPTION_ALGORITHM的算法加密innodb数据文件的备份，目前支持的算法有ASE128,AES192,AES256。
+--encrypt-key：该选项使用合适长度加密key，因为会记录到命令行，所以不推荐使用。
+--encryption-key-file：该选项表示文件必须是一个简单二进制或者文本文件，加密key可通过以下命令行命令生成：openssl rand -base64 24。
+--encrypt-threads：该选项表示并行加密的worker线程数量。
+--encrypt-chunk-size：该选项表示每个加密线程worker buffer的大小，单位是字节，默认是64K。
+
+#增量备份参数
+--incremental：该选项表示创建一个增量备份，需要指定--incremental-basedir。
+--incremental-basedir：该选项表示接受了一个字符串参数指定含有full backup的目录为增量备份的base目录，与--incremental同时使用。
+--incremental-lsn：该选项表示指定增量备份的LSN，与--incremental选项一起使用。
+--incremental-dir：该选项表示增量备份的目录。
+--incremental-force-scan：该选项表示创建一份增量备份时，强制扫描所有增量备份中的数据页。
+--incremental-history-name：该选项表示存储在PERCONA_SCHEMA.xtrabackup_history基于增量备份的历史记录的名字。Percona Xtrabackup搜索历史表查找最近（innodb_to_lsn）成功备份并且将to_lsn值作为增量备份启动出事lsn.与innobackupex--incremental-history-uuid互斥。如果没有检测到有效的lsn，xtrabackup会返回error。
+--incremental-history-uuid：该选项表示存储在percona_schema.xtrabackup_history基于增量备份的特定历史记录的UUID。 
+
+#主从
+--slave-info：该选项表示对slave进行备份的时候使用，打印出master的名字和binlog pos，同样将这些信息以change master的命令写入xtrabackup_slave_info文件。可以通过基于这份备份启动一个从库。
+--safe-slave-backup：该选项表示为保证一致性复制状态，这个选项停止SQL线程并且等到show status中的slave_open_temp_tables为0的时候开始备份，如果没有打开临时表，bakcup会立刻开始，否则SQL线程启动或者关闭知道没有打开的临时表。如果slave_open_temp_tables在--safe-slave-backup-timeount（默认300秒）秒之后不为0，从库sql线程会在备份完成的时候重启。
+
+--include：该选项表示使用正则表达式匹配表的名字[db.tb]，要求为其指定匹配要备份的表的完整名称，即databasename.tablename。
+--tables-file：该选项表示指定含有表列表的文件，格式为database.table，该选项直接传给--tables-file。
+--no-timestamp：该选项可以表示不要创建一个时间戳目录来存储备份，指定到自己想要的备份文件夹。
+--rsync：该选项表示通过rsync工具优化本地传输，当指定这个选项，innobackupex使用rsync拷贝非Innodb文件而替换cp，当有很多DB和表的时候会快很多，不能--stream一起使用。
+--stream：该选项表示流式备份的格式，backup完成之后以指定格式到STDOUT，目前只支持tar和xbstream。
+--ibbackup：该选项指定了使用哪个xtrabackup二进制程序。IBBACKUP-BINARY是运行percona xtrabackup的命令。这个选项适用于xtrbackup二进制不在你是搜索和工作目录，如果指定了该选项,innoabackupex自动决定用的二进制程序。
+--kill-long-queries-timeout：该选项表示从开始执行FLUSH TABLES WITH READ LOCK到kill掉阻塞它的这些查询之间等待的秒数。默认值为0，不会kill任何查询，使用这个选项xtrabackup需要有Process和super权限。
+--kill-long-query-type：该选项表示kill的类型，默认是all，可选select。
+--ftwrl-wait-threshold：该选项表示检测到长查询，单位是秒，表示长查询的阈值。
+--ftwrl-wait-query-type：该选项表示获得全局锁之前允许那种查询完成，默认是ALL，可选update。
+--galera-info：该选项表示生成了包含创建备份时候本地节点状态的文件xtrabackup_galera_info文件，该选项只适用于备份PXC。
+--defaults-extra-file：该选项指定了在标准defaults-file之前从哪个额外的文件读取MySQL配置，必须在命令行的第一个选项的位置。一般用于存备份用户的用户名和密码的配置文件。
+----defaults-group：该选项表示从配置文件读取的组，innobakcupex多个实例部署时使用。
+--no-lock：该选项表示关闭FTWRL的表锁，只有在所有表都是Innodb表并且不关心backup的binlog pos点，如果有任何DDL语句正在执行或者非InnoDB正在更新时（包括mysql库下的表），都不应该使用这个选项，后果是导致备份数据不一致，如果考虑备份因为获得锁失败，可以考虑--safe-slave-backup立刻停止复制线程。
+--tmpdir：该选项表示指定--stream的时候，指定临时文件存在哪里，在streaming和拷贝到远程server之前，事务日志首先存在临时文件里。在 使用参数stream=tar备份的时候，你的xtrabackup_logfile可能会临时放在/tmp目录下，如果你备份的时候并发写入较大的话 xtrabackup_logfile可能会很大(5G+)，很可能会撑满你的/tmp目录，可以通过参数--tmpdir指定目录来解决这个问题。
+--history：该选项表示percona server 的备份历史记录在percona_schema.xtrabackup_history表。   --close-files：该选项表示关闭不再访问的文件句柄，当xtrabackup打开表空间通常并不关闭文件句柄目的是正确的处理DDL操作。如果表空间数量巨大，这是一种可以关闭不再访问的文件句柄的方法。使用该选项有风险，会有产生不一致备份的可能。
+--compact：该选项表示创建一份没有辅助索引的紧凑的备份。
+--throttle：该选项表示每秒IO操作的次数，只作用于bakcup阶段有效。apply-log和--copy-back不生效不要一起用。
+```
+
+
 
 ## Vmware 扩容
 
@@ -1229,7 +1309,7 @@ mongodump --username=admin --password=123456 --db temp -o directory
 config = { _id:"mongoback", members:[{_id:0,host:"192.168.0.8:27017"},{_id:1,host:"192.168.0.10:27017"}]}
 ```
 
-## ntp 安装使用
+## ntp 时间同步
 
 检查ntp是否安装
 
@@ -1405,6 +1485,16 @@ systemctl start zabbix-agent
 systemctl enable zabbix-agent
 ```
 
+系统读写状态监控
+
+zabbix_agentd.conf最后加入：
+
+```sh
+UserParameter=check_disk_status,mount | awk '{print $NF}'|cut -c 2-3|awk '{if($1~/ro/) {print 1}}'|wc -l|awk '{if($1<=0) {print 0 } else {print 1}}'
+```
+
+
+
 ## Python3 安装配置
 
 ### 第一种方法：
@@ -1510,7 +1600,10 @@ ln -s /usr/local/python3/bin/pip3 /usr/bin/pip3
 
 ```
 
-
+```sh
+ln -snf /usr/local/bin/python3 /usr/bin/python3
+ln -snf /usr/local/bin/pip3 /usr/bin/pip3
+```
 
 ## ElasticSearch 安装
 
@@ -1549,4 +1642,133 @@ cd /opt/elasticsearch/bin
 ```shell
 wget https://mirrors.huaweicloud.com/kibana/7.8.0/kibana-7.8.0-x86_64.rpm
 ```
+
+## frp的使用
+
+> 一个免费的内网穿透工具，支持多种协议。
+
+下载地址
+
+> https://file.kskxs.com/?dir=/frp
+
+下载对应平台压缩包，然后解压
+
+> frpc 代表客户端 frps 代表服务端，ini结尾的分别代表各自的配置文件
+>
+> 客户端就是我我们需要正真运行应用程序的机器，处于内网，需要被外网访问。
+>
+> 服务端就是位于公网的机器，用于访问的入口。
+
+服务端配置文件
+
+```ini
+[common]
+bind_port = 7000
+dashboard_port = 7500
+token = 12345678
+dashboard_user = admin
+dashboard_pwd = admin
+vhost_http_port = 10080
+vhost_https_port = 10443
+```
+
+> bind_port 代表与客户端连接的端口，到时候客户端配置的时候要一致
+>
+> dashboard_port 代表仪表盘的端口，可以访问这个端口，看到一个可视化界面
+>
+> token可以不填，自定义的口令，如果填了，需要和客户端配置文件保持一致
+>
+> dashboard_user，dashboard_pwd，是仪表盘的用户名和密码
+>
+> vhost_http_port，vhost_https_port 用于反向代理主机时使用，可以访问到客户端的服务
+
+客户端配置文件
+
+```ini
+[common]
+server_addr = x.x.x.x
+server_port = 7000
+token = won517574356
+[rdp]
+type = tcp
+local_ip = 127.0.0.1           
+local_port = 3389
+remote_port = 7001  
+[smb]
+type = tcp
+local_ip = 127.0.0.1
+local_port = 445
+remote_port = 7002
+```
+
+> server_addr 服务端的IP地址
+>
+> server_port 与服务端配置文件的bind_port 一致
+>
+> token与服务端配置token一致
+>
+> [***] 是每个服务名称
+>
+> type 是协议类型
+>
+> local_ip，local_port，本地IP与端口
+>
+> remote_port，远程服务端开放的端口号，通过服务端的这个端口访问到本地服务
+
+运行
+
+```shell
+# linux
+nohup frpc -c frpc.ini > frpc.log &
+
+nohup frps -c frps.ini > frps.log &
+
+# windows 
+frpc.exe #修改好配置文件，直接双击，
+frps.exe #修改好配置文件，直接双击，
+```
+
+Docker 安装配置
+
+安装
+
+第一种方式:
+
+```sh
+# centos 7 自带docker源
+yum install docker
+```
+
+第二种方式:
+
+```sh
+curl -sSL https://get.daocloud.io/docker | sh
+```
+
+卸载
+
+```shell
+# 卸载相关软件
+sudo yum remove docker \
+docker-common \
+container-selinux \
+docker-selinux \
+docker-engine
+```
+
+```shell
+# 删除临时，目录
+rm -fr /var/lib/docker/
+```
+
+安装docker-compose
+
+```shell
+# 将二进制文件下载到bin目录
+curl -L https://get.daocloud.io/docker/compose/releases/download/1.29.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+# 添加执行权限
+chmod +x /usr/local/bin/docker-compose
+```
+
+docker 命令
 
