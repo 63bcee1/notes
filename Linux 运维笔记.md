@@ -115,6 +115,10 @@ rmmod：Remove module
 >
 > /var = Variable (变量)
 
+## 参考链接
+
+https://www.runoob.com/linux/linux-command-manual.html
+
 ## ssh 配置与使用
 
 SSH提供两种身份验证方式，一种是基于口令，一种是基于密钥。
@@ -200,6 +204,34 @@ yum install -y zlib-devel
 
 ```shell
 yum install -y openssl-devel
+```
+
+**使用密钥的方法**
+
+生成公私钥对
+
+```shell
+ssh-keygen -t rsa
+```
+
+上传公钥
+
+```shell
+ssh-copy-id root@192.168.120.128
+```
+
+登陆
+
+```shell
+# 不用输入密码，直接登陆
+ssh -p 2022 192.168.120.128
+```
+
+传输文件
+
+```shell
+# 不用输入密码，直接传输
+scp dist.zip 192.168.120.128:/usr/local/nginx/jd-boot
 ```
 
 以上一centos为例，其他系统大同小异。
@@ -425,7 +457,17 @@ sar -n SOCK
 sar -n TCP
 ```
 
+## mount&umount
 
+挂载
+
+```shell
+mount -t nfs 192.168.0.17:/opt/upFiles /opt/upFiles
+```
+
+```sh
+mount /dev/sda3 /root/file
+```
 
 ## firewall 常用配置
 
@@ -696,6 +738,86 @@ rsync -av -e 'ssh -p 2022' /root/work/backup/database 192.168.0.16:/root/work/te
 rsync -av temp/ dest/
 ```
 
+## zip&unzip
+
+安装
+
+```shell
+yum install zip
+yum install unzip
+```
+
+使用
+
+```shell
+# 解压
+unzip filename.zip
+
+# 压缩 9 是压缩级别 v是显示过程信息 r是递归
+zip -rv9 xxx.zip ./*
+```
+
+## GCC  编译 最新版
+
+下载
+
+```
+wget https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz
+```
+
+解压
+
+```
+tar -xvf gcc-11.2.0.tar.xz
+```
+
+配置
+
+```
+cd gcc-11.2.0
+
+./contrib/download_prerequisites
+```
+
+编译
+
+```shell
+# -j4选项是make对多核处理器的优化。
+make -j4
+```
+
+安装
+
+```shell
+make install 
+```
+
+## GCC 升级到8.3
+
+安装centos-release-scl
+
+```
+yum install centos-release-scl
+```
+
+安装devtoolset
+
+```
+yum install devtoolset-8-gcc*
+```
+
+激活对应的devtoolset
+
+```
+scl enable devtoolset-8 bash
+```
+
+检查版本
+
+```
+gcc -v
+```
+
 ## JDK 安装配置
 
 相比windows，linux上安装配置jdk不要太简单，这也是我渐渐不喜欢windos的原因之一。
@@ -781,7 +903,27 @@ tar -xzvf nginx-1.18.0.tar.gz
 cd nginx-1.18.0
 # 这个是使用默认的，什么参数也不加
 ./configure 
-# 中途有抱什么错误，直接把错误第一行，复制粘贴到搜索框，一搜就能找到解决办法，多半是确实某个组件
+# 中途有抱什么错误，直接把错误第一行，复制粘贴到搜索框，一搜就能找到解决办法，多半是缺少某个组件
+```
+
+问题
+
+> the HTTP rewrite module requires the PCRE library.
+>
+> yum -y install pcre-devel
+>
+> the HTTP gzip module requires the zlib library.
+>
+> yum install -y zlib-devel
+
+跨域
+
+```shell
+#nginx中具体的location中加入如下配置
+add_header Access-Control-Allow-Origin *;
+add_header  Referrer-Policy  "origin-when-crossorigin";
+add_header 'Referrer-Policy' 'origin';
+add_header 'Referrer-Policy' 'unsafe-url';
 ```
 
 安装
@@ -982,7 +1124,7 @@ nginx -t
 client_max_body_size   20m;
 ```
 
-## Redis 安装配置
+## Redis 5.0 安装配置
 
 下载
 
@@ -1022,6 +1164,38 @@ netstat -tnulp|grep redis
 # 出现下面的结果，说明redis安装成功，而且已经在运行了
 tcp        0      0 0.0.0.0:6379            0.0.0.0:*               LISTEN      11765/./redis-serve
 ```
+
+## Redis 6.0 安装配置
+
+下载
+
+```shell
+wget http://download.redis.io/releases/redis-6.0.6.tar.gz
+```
+
+解压
+
+```shell
+tar xzf redis-6.0.6.tar.gz
+```
+
+编译&安装
+
+```shell
+cd  redis-6.0.6
+
+make && make install
+```
+
+错误
+
+> In file included from server.c:30:0:
+> server.h:1022:5: error: expected specifier-qualifier-list before ‘_Atomic’
+>    _Atomic unsigned int lruclock; /* Clock for LRU eviction */
+>
+> 这是由于redis6.0需要GCC版本高于5
+>
+> 升级GCC 已经单写了，就不在此细说。
 
 ## Mysql 安装配置
 
@@ -1728,7 +1902,7 @@ frpc.exe #修改好配置文件，直接双击，
 frps.exe #修改好配置文件，直接双击，
 ```
 
-Docker 安装配置
+## Docker 安装配置
 
 安装
 
@@ -1771,4 +1945,227 @@ chmod +x /usr/local/bin/docker-compose
 ```
 
 docker 命令
+
+> ```
+> 待续...
+> ```
+
+## Maven 安装配置
+
+下载
+
+https://maven.apache.org/download.cgi
+
+```shell
+cd /urs/local
+wget https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz
+```
+
+解压
+
+```
+tar -xavf apache-maven-3.8.1-bin.tar.gz
+
+mv apache-maven-3.8.1-bin/ maven
+```
+
+配置
+
+```shell
+vim /etc/prfile
+
+# 最后加入
+MAVEN_HOME=/usr/local/maven
+export PATH=${MAVEN_HOME}/bin:${PATH}
+
+source /etc/profile
+
+```
+
+验证
+
+```shell
+mvn -v
+```
+
+## Node JS 安装配置
+
+下载
+
+```
+cd /usr/local
+
+wget https://nodejs.org/dist/v16.2.0/node-v16.2.0-linux-x64.tar.xz
+```
+
+解压
+
+```shell
+tar -xvf node-v16.2.0-linux-x64.tar.xz
+
+mv node-v16.2.0-linux-x64/ node
+```
+
+配置
+
+```shell
+vim /etc/profile
+
+# 最后加入
+export PATH=/usr/local/node/bin:${PATH}
+
+source /etc/profile
+```
+
+验证
+
+```shell
+node -v
+```
+
+换源
+
+```shell
+npm config set registry http://registry.npm.taobao.org/
+```
+
+## fdisk 分区及使用
+
+查看分区
+
+```shell
+# 查看磁盘分区
+fdisk -l
+
+# 查看系统磁盘
+lsblk
+
+# 查看磁盘大小
+df -lh 
+```
+
+分区
+
+```sh
+fdisk /dev/sda
+
+# 新建分区
+n
+# 主分区
+p
+
+```
+
+格式化
+
+```sh
+mkfs -t xfs /dev/sda1
+```
+
+挂载
+
+```sh
+# 创建文件夹
+mkdir temp
+# 挂载分区到创建的文件夹 
+mount /dev/sda1 temp
+```
+
+## Jenkins 安装使用
+
+安装
+
+```sh
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+yum install jenkins
+```
+
+修改配置
+
+```shell
+vim /etc/sysconfig/jenkins
+
+# 改成自定义的端口，也可以不改
+JENKINS_PORT="9090"
+# 改成root用户，防止权限不够，运行失败
+JENKINS_USER="root"
+```
+
+授权
+
+```
+# jenkins 用到的文件夹
+chown -R root:root /var/lib/jenkins
+chown -R root:root /var/cache/jenkins
+chown -R root:root /var/log/jenkins
+```
+
+构建脚本
+
+```shell
+
+
+
+```
+
+前端构建
+
+```shell
+echo pwd
+
+echo $JOB_NAME
+
+rm -rf package-lock.json yarn.lock
+
+yarn cache clean&&yarn install&&yarn build
+
+DIST='/root/build/'$JOB_NAME'-build-'`date +%Y-%m-%d`'-v'$BUILD_NUMBER
+
+mkdir -p $DIST
+
+zip -r9 dist/dist.zip dist/*
+
+mv dist/dist.zip $DIST
+```
+
+后端构建
+
+```sh
+echo pwd
+
+echo $JOB_NAME
+
+/usr/local/apache-maven-3.8.1/bin/mvn clean && /usr/local/apache-maven-3.8.1/bin/mvn install && /usr/local/apache-maven-3.8.1/bin/mvn package
+
+DIST='/root/build/'$JOB_NAME'-build-'`date +%Y-%m-%d`'-v'$BUILD_NUMBER
+
+mkdir -p $DIST
+
+mv jeecg-boot-module-system/target/jeecg-boot-module-system-2.3.0.jar $DIST
+
+```
+
+## clamav 安装和使用
+
+开源的ClamAV 杀毒软件
+
+安装
+
+```shell
+yum -y install epel-release
+yum -y install clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd 
+```
+
+更新病毒库
+
+```shell
+freshclam
+```
+
+病毒扫描
+
+```
+clamscan
+```
 
